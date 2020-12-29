@@ -2,20 +2,63 @@ plugins {
     id 'java'
 }
 
-group 'net.christopschubert.kafka.connect.smt'
+group 'net.christophschubert.'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.11
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven {
         url 'https://packages.confluent.io/maven'
     }
 }
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+sourceSets {
+    intTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
 
+configurations {
+    intTestImplementation.extendsFrom implementation
+    intTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+task integrationTest(type: Test) {
+    description = "Runs integration tests"
+    group = 'verification'
+
+    testClassesDirs = sourceSets.intTest.output.classesDirs
+    classpath = sourceSets.intTest.runtimeClasspath
+    shouldRunAfter test
+}
+
+check.dependsOn integrationTest
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+
+    compile group: 'org.apache.kafka', name: 'connect-api', version: '2.6.0'
+    compile group: 'org.apache.kafka', name: 'connect-transforms', version: '2.6.0'
     compile group: 'org.apache.kafka', name: 'kafka-clients', version: '2.6.0'
+
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.29'
+
+    intTestImplementation "net.christophschubert:cp-testcontainers:0.1.0-SNAPSHOT"
+    intTestImplementation "net.christophschubert:kafka-connect-java-client:0.1.0-SNAPSHOT"
+    intTestImplementation "org.testcontainers:testcontainers:1.15.1"
+    intTestImplementation "org.testcontainers:kafka:1.15.1"
+
+
+    intTestImplementation "org.testcontainers:junit-jupiter:1.15.1"
+}
+
+
+
+test {
+    useJUnitPlatform()
 }
