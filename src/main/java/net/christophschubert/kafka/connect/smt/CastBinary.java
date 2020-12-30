@@ -59,6 +59,8 @@ public class CastBinary<R extends ConnectRecord<R>> implements Transformation<R>
     Object doCast(Object v) {
         final byte[] b = (byte[])v;
         switch (castToType) {
+            case "HexString":
+                return castToHexString(b);
             case "String":
                 return new String(b, charSet);
             case "Double":
@@ -80,6 +82,13 @@ public class CastBinary<R extends ConnectRecord<R>> implements Transformation<R>
         }
     }
 
+    String castToHexString(byte[] bytes) {
+        final var sb = new StringBuilder();
+        for (final byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
+    }
 
     Double castDouble(byte[] b) {
         checkWidth(b, Double.BYTES);
@@ -121,7 +130,7 @@ public class CastBinary<R extends ConnectRecord<R>> implements Transformation<R>
             throw new DataException(msg);
         }
     }
-    
+
 
     @Override
     public ConfigDef config() {
@@ -135,6 +144,7 @@ public class CastBinary<R extends ConnectRecord<R>> implements Transformation<R>
 
     Schema typeToSchema(String typeName) {
         switch (typeName) {
+            case "HexString": //fallthrough
             case "String": return Schema.STRING_SCHEMA;
             case "Boolean": return Schema.BOOLEAN_SCHEMA;
             case "Double": return Schema.FLOAT64_SCHEMA;
@@ -142,7 +152,7 @@ public class CastBinary<R extends ConnectRecord<R>> implements Transformation<R>
             case "Long": return Schema.INT64_SCHEMA;
             case "Int":  return Schema.INT32_SCHEMA;
             case "Short": return Schema.INT16_SCHEMA;
-            case "Byte": //passthrough
+            case "Byte": //fallthrough
             default: return Schema.INT8_SCHEMA;
         }
     }

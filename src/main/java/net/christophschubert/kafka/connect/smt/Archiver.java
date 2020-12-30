@@ -1,6 +1,7 @@
 package net.christophschubert.kafka.connect.smt;
 
 import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.connect.header.Headers;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -8,12 +9,16 @@ import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.transforms.Transformation;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 
 //possible improvements:
 // cache schemas
 public class Archiver<R extends ConnectRecord<R>> implements Transformation<R> {
+
+    final ConfigDef configDef = new ConfigDef();
 
     @Override
     public R apply(R record) {
@@ -58,9 +63,13 @@ public class Archiver<R extends ConnectRecord<R>> implements Transformation<R> {
                 put(CommonConfig.PARTITION_FIELD, record.kafkaPartition()).
                 put(CommonConfig.OFFSET_FIELD, getOffset(record)).
                 put(CommonConfig.TIMESTAMP_FIELD, record.timestamp()).
-                put(CommonConfig.HEADERS_FIELD, null); // TODO: implement header handling
+                put(CommonConfig.HEADERS_FIELD, convertHeaders(record.headers())); // TODO: implement header handling
 
         return record.newRecord(record.topic(), record.kafkaPartition(), null, null, schema, v, record.timestamp());
+    }
+
+    Map<String, List<Object>> convertHeaders(Headers headers) {
+        return Collections.emptyMap();
     }
 
     Long getOffset(R record) {
@@ -74,10 +83,6 @@ public class Archiver<R extends ConnectRecord<R>> implements Transformation<R> {
 
     @Override
     public ConfigDef config() {
-        final var configDef = new ConfigDef();
-
-
-
         return configDef;
     }
 
